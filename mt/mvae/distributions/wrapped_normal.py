@@ -23,6 +23,7 @@ from ..ops import Manifold, StereographicallyProjectedSphere, PoincareBall
 
 
 class WrappedNormal(torch.distributions.Distribution, VaeDistribution):
+
     arg_constraints = {
         "loc": torch.distributions.constraints.real_vector,
         "scale": torch.distributions.constraints.positive
@@ -31,7 +32,7 @@ class WrappedNormal(torch.distributions.Distribution, VaeDistribution):
     has_rsample = True
 
     def __init__(self, loc: Tensor, scale: Tensor, manifold: Manifold, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, validate_args = False)
         self.dim = loc.shape[-1]
 
         # is projected?

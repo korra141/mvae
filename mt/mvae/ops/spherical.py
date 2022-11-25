@@ -21,9 +21,22 @@ import torch.nn.functional as F
 
 from .common import sqrt, e_i, expand_proj_dims
 from .manifold import RadiusManifold
+EPS = 1e-9
 
 
 class Sphere(RadiusManifold):
+    def exp_map(self, pt, at_point):
+        return exp_map(pt, at_point=at_point, radius=self.radius)
+
+    def proj2manifold(self,x):
+        return x / (x.norm(dim=1).unsqueeze(-1) + EPS)
+
+    def inverse_exp_map(self, x: Tensor, v: Tensor) -> Tensor:
+        shape = v.shape
+        if len(shape) == 2:
+            v = v.unsqueeze(2)
+        x = x.unsqueeze(2)
+        return (v - x * (x * v).sum(dim=1, keepdim=True)).view(shape)
 
     def exp_map_mu0(self, x: Tensor) -> Tensor:
         return exp_map_mu0(expand_proj_dims(x), radius=self.radius)

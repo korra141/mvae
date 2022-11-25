@@ -23,8 +23,10 @@ from torch.optim import Optimizer
 
 from .components import Component, ConstantComponent, EuclideanComponent, StereographicallyProjectedSphereComponent
 from .components import SphericalComponent, UniversalComponent, HyperbolicComponent, PoincareComponent
-from .sampling import WrappedNormalProcedure, EuclideanNormalProcedure, EuclideanConstantProcedure
-from .sampling import UniversalSamplingProcedure
+# from .sampling import WrappedNormalProcedure, , EuclideanConstantProcedure
+# from .sampling import UniversalSamplingProcedure
+from .sampling import EuclideanNormalProcedure
+from .ops.sde import AmbientHyperbolicBrownianMotion, AmbientSphericalBrownianMotion, AmbientHyperbolicGenerative, AmbientSphericalGenerative
 # from .sampling import SphericalVmfProcedure, ProjectedSphericalVmfProcedure, RiemannianNormalProcedure
 
 space_creator_map = {
@@ -38,13 +40,13 @@ space_creator_map = {
 }
 
 sampling_procedure_map = {
-    SphericalComponent: WrappedNormalProcedure,
-    StereographicallyProjectedSphereComponent: WrappedNormalProcedure,
+    SphericalComponent: AmbientSphericalBrownianMotion,
+    # StereographicallyProjectedSphereComponent: WrappedNormalProcedure,
     EuclideanComponent: EuclideanNormalProcedure,
-    ConstantComponent: EuclideanConstantProcedure,
-    HyperbolicComponent: WrappedNormalProcedure,
-    PoincareComponent: WrappedNormalProcedure,
-    UniversalComponent: UniversalSamplingProcedure,
+    # ConstantComponent: EuclideanConstantProcedure,
+    HyperbolicComponent: AmbientHyperbolicBrownianMotion,
+    # PoincareComponent: WrappedNormalProcedure,
+    # UniversalComponent: UniversalSamplingProcedure,
 }
 
 
@@ -144,7 +146,16 @@ def linear_betas(start: float, end: float, end_epoch: int, epochs: int) -> np.nd
     return np.concatenate((np.linspace(start, end, num=end_epoch), end * np.ones(
         (epochs - end_epoch,), dtype=np.float32)))
 
-
+def stratified_uniform(n, r, device="cpu"):
+    """
+    generate a batch of uniform([0, r]) samples in a stratefied manner (to reduce variance)
+    """
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    t = (
+                torch.rand(n, device=device) / n + torch.Tensor(indices).to(device) / n
+        ).unsqueeze(-1) * r
+    return t
 class CurvatureOptimizer(Optimizer):
 
     def __init__(self,
@@ -178,3 +189,5 @@ class CurvatureOptimizer(Optimizer):
                 self.pos.step(closure)
             if self.neg is not None:
                 self.neg.step(closure)
+
+

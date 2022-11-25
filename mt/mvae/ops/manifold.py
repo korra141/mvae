@@ -73,3 +73,6 @@ class RadiusManifold(Manifold):
     @property
     def radius(self) -> Tensor:
         return torch.clamp(torch.relu(self._radius()), min=1e-8, max=1e8)
+
+    def inverse_exp_map(self, x: Tensor, at_point: Tensor):
+        return 1

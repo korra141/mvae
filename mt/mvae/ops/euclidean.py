@@ -27,6 +27,9 @@ class Euclidean(Manifold):
     def radius(self) -> Tensor:
         return 0
 
+    def inverse_exp_map(x: Tensor, at_point: Tensor) -> Tensor:
+        return 2 * (x - at_point)
+
     @property
     def curvature(self) -> Tensor:
         return 0

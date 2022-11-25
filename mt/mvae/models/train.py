@@ -195,11 +195,11 @@ class Trainer:
 
         batch_stats = []
         for x_mb, y_mb in train_data:
-            stats, (reparametrized, _, _) = self.model.train_step(optimizer, x_mb, beta=beta)
+            stats, _ = self.model.train_step(optimizer, x_mb, beta=beta)
 
             if self.stats.train_statistics:
                 stats.summaries(self.stats, prefix="train/batch")
-                for i, (component, r) in enumerate(zip(self.model.components, reparametrized)):
+                for i, (component, r) in enumerate(zip(self.model.components)):
                     self.stats.add_scalar(f"train/batch/{component.summary_name(i)}/curvature",
                                           component.manifold.curvature)
                     for key, val in component.summaries(i, r.q_z, prefix="train/batch").items():
@@ -234,18 +234,18 @@ class Trainer:
         histograms: Dict[str, List[torch.Tensor]] = defaultdict(list)
         for batch_idx, (x_mb, y_mb) in enumerate(test_data):
             x_mb = x_mb.to(self.model.device)
-            reparametrized, concat_z, x_mb_ = self.model(x_mb)
-            stats = self.model.compute_batch_stats(x_mb, x_mb_, reparametrized, likelihood_n=likelihood_n, beta=beta)
+            x_mb_ = self.model(x_mb)
+            stats = self.model.compute_batch_stats(x_mb, x_mb_, likelihood_n=likelihood_n, beta=beta)
             batch_stats.append(stats.convert_to_float())
 
-            for i, (component, r) in enumerate(zip(self.model.components, reparametrized)):
+            for i, (component, r) in enumerate(zip(self.model.components)):
                 for key, val in component.summaries(i, r.q_z, prefix="eval/batch").items():
                     histograms[key].append(val)
                 if show_embeddings and batch_idx % 10 == 0:
                     embeddings[i].append(r.q_z.loc)
 
             if show_embeddings and batch_idx % 10 == 0:
-                total_embeddings.append(concat_z)
+                # total_embeddings.append(concat_z)
                 labels.append(y_mb)
 
             if image_summary:
@@ -256,25 +256,25 @@ class Trainer:
         for key, val_lst in histograms.items():
             self.stats.add_histogram(tag=key, values=torch.cat(val_lst, dim=0), epoch=True)
 
-        if show_embeddings:
-            total_embeddings_cat = torch.cat(total_embeddings, dim=0)
-            labels_cat = torch.flatten(torch.cat(labels, dim=0)).tolist()
-            self.stats.add_embedding(tag="eval/total_embeddings",
-                                     mat=total_embeddings_cat,
-                                     metadata=labels_cat,
-                                     epoch=True)
-            for i, component in enumerate(self.model.components):
-                tag = f"eval/{component.summary_name(i)}/embeddings"
-                embeddings_cat = torch.cat(embeddings[i], dim=0)
-                if component.manifold.curvature < 0:
-                    if isinstance(component, HyperbolicComponent):
-                        embeddings_poincare = H.lorentz_to_poincare(embeddings_cat, radius=component.manifold.radius)
-                    else:
-                        embeddings_poincare = embeddings_cat
-                    fig = plot_poincare_embeddings(embeddings_poincare, labels_cat)
-                    self.stats.add_figure(tag=tag + "_proj", figure=fig, epoch=True)
-                self.stats.add_embedding(tag=tag, mat=embeddings_cat, metadata=labels_cat, epoch=True)
-            self._save_epoch(self.epoch)  # Save an epoch that has embeddings, because the TF projector needs it.
+        # if show_embeddings:
+        #     total_embeddings_cat = torch.cat(total_embeddings, dim=0)
+        #     labels_cat = torch.flatten(torch.cat(labels, dim=0)).tolist()
+        #     self.stats.add_embedding(tag="eval/total_embeddings",
+        #                              mat=total_embeddings_cat,
+        #                              metadata=labels_cat,
+        #                              epoch=True)
+        #     for i, component in enumerate(self.model.components):
+        #         tag = f"eval/{component.summary_name(i)}/embeddings"
+        #         embeddings_cat = torch.cat(embeddings[i], dim=0)
+        #         if component.manifold.curvature < 0:
+        #             if isinstance(component, HyperbolicComponent):
+        #                 embeddings_poincare = H.lorentz_to_poincare(embeddings_cat, radius=component.manifold.radius)
+        #             else:
+        #                 embeddings_poincare = embeddings_cat
+        #             fig = plot_poincare_embeddings(embeddings_poincare, labels_cat)
+        #             self.stats.add_figure(tag=tag + "_proj", figure=fig, epoch=True)
+        #         self.stats.add_embedding(tag=tag, mat=embeddings_cat, metadata=labels_cat, epoch=True)
+        #     self._save_epoch(self.epoch)  # Save an epoch that has embeddings, because the TF projector needs it.
 
         epoch_stats = EpochStats(batch_stats, length=len(test_data.dataset))
         epoch_stats.summaries(self.stats, prefix="eval/epoch")

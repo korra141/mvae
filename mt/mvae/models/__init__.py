@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
+from .diffusionmodel import DiffusionModel
 from .train import Trainer
 from .ffnn_vae import FeedForwardVAE
 from .conv_vae import ConvolutionalVAE
@@ -21,4 +21,5 @@ __all__ = [
     "ConvolutionalVAE",
     "FeedForwardVAE",
     "Trainer",
+    "DiffusionModel"
 ]

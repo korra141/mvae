@@ -13,11 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 
-from .sampling_procedures import SamplingProcedure, SphericalVmfProcedure, WrappedNormalProcedure
-from .sampling_procedures import EuclideanConstantProcedure, EuclideanNormalProcedure, RiemannianNormalProcedure
-from .sampling_procedures import ProjectedSphericalVmfProcedure, UniversalSamplingProcedure
+from .sampling_procedures import SamplingProcedure
+    # , SphericalVmfProcedure, WrappedNormalProcedure
+from .sampling_procedures import  EuclideanNormalProcedure
+    # EuclideanConstantProcedure,,RiemannianNormalProcedure
+# from .sampling_procedures import ProjectedSphericalVmfProcedure, UniversalSamplingProcedure
 
 __all__ = [
-    "SamplingProcedure", "EuclideanConstantProcedure", "EuclideanNormalProcedure", "RiemannianNormalProcedure",
-    "SphericalVmfProcedure", "WrappedNormalProcedure", "ProjectedSphericalVmfProcedure", "UniversalSamplingProcedure"
+    "SamplingProcedure",
+    # "EuclideanConstantProcedure",
+    "EuclideanNormalProcedure",
+    # "RiemannianNormalProcedure",
+    # "SphericalVmfProcedure", "WrappedNormalProcedure", "ProjectedSphericalVmfProcedure", "UniversalSamplingProcedure"
 ]

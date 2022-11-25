@@ -29,10 +29,9 @@ P = TypeVar('P', bound=Distribution)
 
 class Component(torch.nn.Module):
 
-    def forward(self, x: Tensor) -> Tuple[Q, P, Tuple[Tensor, ...]]:
-        z_params = self.encode(x)
-        q_z, p_z = self.reparametrize(*z_params)
-        return q_z, p_z, z_params
+    def forward(self, x,t):
+        p_z = self.sampling_dm(x,t)
+        return p_z
 
     def __init__(self, dim: int, fixed_curvature: bool, sampling_procedure: Type[SamplingProcedure[Q, P]]) -> None:
         super().__init__()
@@ -45,9 +44,9 @@ class Component(torch.nn.Module):
         self.fc_mean: torch.nn.Linear = None
         self.fc_logvar: torch.nn.Linear = None
 
-    def init_layers(self, in_dim: int, scalar_parametrization: bool) -> None:
+    def init_layers(self, in_dim: int, T, scalar_parametrization: bool) -> None:
         self.manifold = self.create_manifold()
-        self.sampling_procedure = self._sampling_procedure_type(self.manifold, scalar_parametrization)
+        self.sampling_procedure = self._sampling_procedure_type(self.manifold, scalar_parametrization,T)
 
         self.fc_mean = torch.nn.Linear(in_dim, self.mean_dim)
 
@@ -74,11 +73,11 @@ class Component(torch.nn.Module):
         assert torch.isfinite(std).all()
         return z_mean_h, std
 
-    def reparametrize(self, z_mean: Tensor, z_logvar: Tensor) -> Tuple[Q, P]:
-        return self.sampling_procedure.reparametrize(z_mean, z_logvar)
+    def sampling_dm(self, x,t):
+        return self.sampling_procedure.reparametrize(x,t)
 
-    def kl_loss(self, q_z: Q, p_z: P, z: Tensor, data: Tuple[Tensor, ...]) -> Tensor:
-        return self.sampling_procedure.kl_loss(q_z, p_z, z, data)
+    def kl_loss(self, x, t, model):
+        return self.sampling_procedure.kl_loss(self.sampling_dm(x,t), t, model)
 
     def __str__(self) -> str:
         return self.__repr__()

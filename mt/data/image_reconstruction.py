@@ -52,7 +52,7 @@ class ImageDynamicBinarization:
         x = x.to(torch.get_default_dtype())
         return x
 
-
+import os
 class MnistVaeDataset(VaeDataset):
 
     def __init__(self, batch_size: int, data_folder: str) -> None:
@@ -60,6 +60,7 @@ class MnistVaeDataset(VaeDataset):
         self.data_folder = data_folder
 
     def _get_dataset(self, train: bool, transform: Any) -> torch.utils.data.Dataset:
+        self.data_folder = "/Users/riarorair/Documents/COMP760/mvae/data"
         return datasets.MNIST(self.data_folder, train=train, download=False, transform=transform)
 
     def _load_mnist(self, train: bool) -> DataLoader:

@@ -67,7 +67,7 @@ class ModelVAE(torch.nn.Module):
         raise NotImplementedError
 
     def forward(self, x: Tensor) -> Outputs:
-        x_encoded = self.encode(x)
+        x_encoded = self.encode(x)  
 
         reparametrized = []
         for component in self.components:

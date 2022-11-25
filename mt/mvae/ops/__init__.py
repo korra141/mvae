@@ -20,6 +20,7 @@ from .hyperbolics import Hyperboloid
 from .euclidean import Euclidean
 from .spherical_projected import StereographicallyProjectedSphere
 from .spherical import Sphere
+from .loss import Loss
 from .universal import Universal
 
 __all__ = [

@@ -21,9 +21,24 @@ import torch.nn.functional as F
 
 from .common import acosh, cosh, sinh, sqrt, logsinh, e_i, expand_proj_dims
 from .manifold import RadiusManifold
-
+MY_EPS = 1e-9
 
 class Hyperboloid(RadiusManifold):
+
+    def proj2manifold(self, x):
+        return x / torch.sqrt(- lorentz_product(x, x, keepdim=True) + MY_EPS)
+    def inverse_exp_map(self, x: Tensor, v: Tensor):
+        shape = v.shape
+        if len(shape) == 2:
+            v = v.unsqueeze(2)
+
+        n_x = x / x.norm(dim=1, keepdim=True)
+        n_x[:, 0] *= -1
+        n_x = n_x.unsqueeze(2)
+        return (v - n_x * (n_x * v).sum(dim=1, keepdim=True)).view(shape)
+
+    def exp_map(self, x: Tensor, at_point: Tensor):
+        return exp_map(x, at_point, radius=self.radius)
 
     def exp_map_mu0(self, x: Tensor) -> Tensor:
         return exp_map_mu0(expand_proj_dims(x), radius=self.radius)
@@ -125,6 +140,7 @@ def inverse_exp_map(x: Tensor, at_point: Tensor, radius: Tensor) -> Tensor:
     alpha = -lorentz_product(at_point, x, keepdim=True) / (radius**2)
     coef = acosh(alpha) / sqrt(alpha**2 - 1)
     ret = coef * (x - alpha * at_point)
+
     return ret
 
 

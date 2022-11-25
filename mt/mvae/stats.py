@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import warnings
 
 import matplotlib.pyplot
+matplotlib.use('TkAgg')
 import torch
 from torch import Tensor
 from tensorboardX import SummaryWriter

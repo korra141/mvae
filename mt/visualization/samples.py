@@ -32,7 +32,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="M-VAE runner.")
     parser.add_argument("--data", type=str, default="./data", help="Data directory.")
     parser.add_argument("--batch_size", type=int, default=150, help="Batch size.")
-    parser.add_argument("--model_a", type=str, default="e72", help="Model latent space description.")
+    parser.add_argument("--model_a", type=str, default="h2,s2,e2", help="Model latent space description.")
     parser.add_argument("--chkpt_a",
                         type=str,
                         default="/home/oskopek/git/mt/vae-mnist-e72-2019-08-28T13:21:06.740534/497.chkpt",
