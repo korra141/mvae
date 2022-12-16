@@ -44,6 +44,7 @@ class Loss:
                     v0[:, i].sum(), y, create_graph=True, retain_graph=True
                 )[0][:, i]
         elif method == "qr":
+            print(f"y {y}")
             a = a_func(y, s)
             # print(a.shape)
             # print(y.shape)
@@ -53,14 +54,17 @@ class Loss:
                 drift = 0
 
             v0 = proj2tangent(y, a) - drift
+            print(f"v0 {v0}")
 
             basis = torch.linalg.qr(
                 proj2tangent(y, torch.randn(y.shape + (dim,), device=y.device))
             )[0]
 
             div_v0 = 0
+            print(y.shape)
             for i in range(dim):
                 q = basis[:, :, i]
+                print((v0 * q).sum().shape)
                 div_v0 += (
                         torch.autograd.grad(
                             (v0 * q).sum(), y, create_graph=True, allow_unused=True

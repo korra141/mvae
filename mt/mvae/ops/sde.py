@@ -141,6 +141,7 @@ def integration(x0, steps, sde, T, projection, step=heun_step):
     for _ in range(steps):
         t += dt
         x = step(t, dt, x, sde.f, sde.g_increment, projection)
+    print(f'In integration step {x.shape}')
     return x
 
 
@@ -161,6 +162,7 @@ class AmbientSphericalBrownianMotion(SamplingProcedure):
         return integration(x, steps, self, t, self.manifold.proj2manifold)
 
     def reparametrize(self, x, t):
+        print(self.__class__.__name__)
         return self.sample(x, t)
 
     def kl_loss(self, x, s, a_func):
@@ -222,6 +224,7 @@ class AmbientHyperbolicBrownianMotion(SamplingProcedure):
         )  # ) # TODO: why is this buggy
 
     def reparametrize(self, x, t):
+        print(self.__class__.__name__)
         return self.sample(x, t)
 
     def log_prob(self, xyz, mean=torch.zeros(1), log_var=torch.zeros(1)):
@@ -248,7 +251,7 @@ class AmbientHyperbolicBrownianMotion(SamplingProcedure):
             proj2tangent=self.manifold.inverse_exp_map,
             T=self.T,
             method="qr",
-            dim=784,
+            dim=8,
         )
                 + self.log_prob(self.sample(y,s)) )
 

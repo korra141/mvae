@@ -28,10 +28,12 @@ class Hyperboloid(RadiusManifold):
     def proj2manifold(self, x):
         return x / torch.sqrt(- lorentz_product(x, x, keepdim=True) + MY_EPS)
     def inverse_exp_map(self, x: Tensor, v: Tensor):
+        # print(self.__class__.__name__)
         shape = v.shape
         if len(shape) == 2:
             v = v.unsqueeze(2)
-
+        # print(f"x {x}")
+        # print(f"v {v}")
         n_x = x / x.norm(dim=1, keepdim=True)
         n_x[:, 0] *= -1
         n_x = n_x.unsqueeze(2)

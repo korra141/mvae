@@ -21,5 +21,5 @@ if __name__ == "__main__":
 
     for train in [True, False]:
         tvd.MNIST(data_dir, download=True, train=train)
-        tvd.CIFAR10(data_dir, download=True, train=train)
-        tvd.Omniglot(data_dir, download=True, background=train)
+        # tvd.CIFAR10(data_dir, download=True, train=train)
+        # tvd.Omniglot(data_dir, download=True, background=train)

@@ -19,35 +19,69 @@ class DiffusionModel(nn.Module):
 
     def __init__(self, components: List[Component], dimh, T,dataset):
         super(DiffusionModel, self).__init__()
+        self.device = torch.device("cpu")
         self.components = nn.ModuleList(components)
         self.total_z_dim = sum(component.dim for component in components)
         self.in_dim = dataset.in_dim
+        self.dimh = 17
         self.reconstruction_loss = dataset.reconstruction_loss
         num_hidden_layers = 4
 
-        layers = [nn.Linear(self.in_dim+ 1, dimh), Swish()]
-
+        layers = [nn.Linear(self.dimh, self.total_z_dim ), Swish()]
         for _ in range(num_hidden_layers - 1):
-            layers.extend([nn.Linear(dimh, dimh), Swish()])
-        layers.extend([nn.Linear(dimh, self.in_dim)])
+            layers.extend([nn.Linear(self.total_z_dim, self.total_z_dim), Swish()])
+        # layers.extend([nn.Linear(self.dimh, self.total_z_dim)])
+
+        self.fc_e0 = nn.Linear(self.in_dim, self.total_z_dim)
+
+        self.fc_d0 = nn.Linear(self.total_z_dim,400)
+        self.fc_logits = nn.Linear(400, dataset.in_dim)
 
         self.net = torch.nn.Sequential(*layers)
         self.T = T
         for component in components:
             component.init_layers(dimh, self.T, scalar_parametrization=False)
 
+
+    def encode(self, x):
+        assert len(x.shape) == 2
+        bs, dim = x.shape
+        self.bs = bs
+        assert dim == self.in_dim
+        x = x.view(bs, self.in_dim)
+
+        x = torch.relu(self.fc_e0(x))
+
+        return x.view(bs, -1)
+
+    def decode(self, concat_z):
+        assert len(concat_z.shape) >= 2
+        bs = concat_z.size(-2)
+
+        x = torch.relu(self.fc_d0(concat_z))
+        x = self.fc_logits(x)
+
+        x = x.view(-1, bs, self.in_dim)  # flatten
+        return x.squeeze(dim=0)
+
     def forward(self,x,t):
+        x_encoded = self.encode(x)
+
+
         z_mani = []
         for component in self.components:
-            assert len(x.shape) == 2
-            bs, dim = x.shape
-            assert dim == self.in_dim
-            x = x.view(bs, self.in_dim)
-            z = component(x,t)
+            assert len(x_encoded.shape) == 2
+            bs, dim = x_encoded.shape
+            # assert dim == self.in_dim
+            # x_encoded = x_encoded.view(bs, self.in_dim)
+            z = component(x_encoded,t)
+            print(z.shape)
             z_mani.append(z)
 
         concat_z = torch.cat(tuple(manis for manis in z_mani),dim=-1)
-        return self.net(torch.cat([concat_z,t],1))\
+        a = torch.cat([concat_z,t],1)
+        print(a.shape)
+        return self.decode(self.net(a))
             # .view(-1,bs,self.in_dim).squeeze(dim=0)
 
     def evaluate_exact_logp(self,dataloader, a_func, bm_sde):
@@ -144,7 +178,7 @@ class DiffusionModel(nn.Module):
                    beta: float):
         optimizer.zero_grad()
 
-        x_mb = x_mb
+        x_mb = x_mb.to(self.device)
         t = utils.stratified_uniform(x_mb.size(0), self.T)
         x_mb_ = self.forward(x_mb,t)
         assert x_mb_.shape == x_mb.shape

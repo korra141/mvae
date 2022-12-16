@@ -146,8 +146,9 @@ class SamplingProcedure(Generic[Q, P]):
 class EuclideanNormalProcedure(SamplingProcedure[EuclideanNormal, EuclideanNormal]):
 
     def reparametrize(self, x,t):
+        print(self.__class__.__name__)
         p_z = EuclideanNormal(torch.zeros_like(x, device=x.device), torch.ones_like(x,device=x.device))
-        return p_z.rsample(x.shape)
+        return p_z.log_prob(x)
 
     def kl_loss(self, x, s, a_func) -> Tensor:
         return (Loss.elbo(

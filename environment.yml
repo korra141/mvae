@@ -24,4 +24,3 @@ dependencies:
   - torchvision=0.3.0
   - yapf=0.27.0
 prefix: $HOME/miniconda3/envs/pt
-

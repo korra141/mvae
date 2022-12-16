@@ -32,6 +32,7 @@ class Sphere(RadiusManifold):
         return x / (x.norm(dim=1).unsqueeze(-1) + EPS)
 
     def inverse_exp_map(self, x: Tensor, v: Tensor) -> Tensor:
+        # print(self.__class__.__name__)
         shape = v.shape
         if len(shape) == 2:
             v = v.unsqueeze(2)
